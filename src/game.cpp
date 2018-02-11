@@ -1,7 +1,6 @@
 #include"game.h"
 
 #include"screens.h"
-#include<stdio.h>
 #include<time.h>
 
 namespace pj {
@@ -16,7 +15,8 @@ game::game() {
 	SDL_RenderSetLogicalSize(this->renderer, PJ_WIDTH, PJ_HEIGHT);
 
     pj::FONT_CODE_BOLD = TTF_OpenFont("CODE Bold.otf", 14);
-    pj::BGM = Mix_LoadMUS("etherealpsyche.living.ogg");
+    pj::BGM = Mix_LoadMUS("etherealpsyche.living.mp3");
+    printf("%p", pj::BGM);
 
     srand(time(NULL));
 
@@ -31,11 +31,11 @@ game::~game() {
 }
 
 void game::start() {
-	SDL_ShowWindow(this->window);
-
 	Mix_PlayMusic(pj::BGM, -1);
 
 	this->set_screen(this->screen_ingame);
+
+	SDL_ShowWindow(this->window);
 }
 
 void game::loop() {

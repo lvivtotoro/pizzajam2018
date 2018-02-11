@@ -40,6 +40,16 @@ screeningame::screeningame(pj::game* game, SDL_Renderer* renderer) : screen(game
     this->groundBottomTexture = SDL_CreateTextureFromSurface(renderer, surf);
     SDL_FreeSurface(surf);
 
+    surf = IMG_Load("arrow.png");
+    this->arrowTexture = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_FreeSurface(surf);
+
+    for(char x = 0; x <= 9; x++) {
+        surf = TTF_RenderGlyph_Solid(pj::FONT_CODE_BOLD, '0' + x, {0, 0, 0});
+        this->digits[x] = SDL_CreateTextureFromSurface(renderer, surf);
+        SDL_FreeSurface(surf);
+    }
+
     this->player = makeBlock(16, PJ_HEIGHT / 2, 8, 8, b2_dynamicBody);
     this->player->GetFixtureList()[0].SetDensity(0.1f);
 
@@ -62,6 +72,8 @@ screeningame::screeningame(pj::game* game, SDL_Renderer* renderer) : screen(game
 screeningame::~screeningame() {
     delete this->debug;
 
+    for(char x = 0; x <= 9; x++)
+        SDL_DestroyTexture(digits[x]);
     for(auto& bg : this->backgrounds)
         SDL_DestroyTexture(bg);
     SDL_DestroyTexture(this->textYouLost);
@@ -69,6 +81,7 @@ screeningame::~screeningame() {
     SDL_DestroyTexture(this->sphereTexture);
     SDL_DestroyTexture(this->groundTopTexture);
     SDL_DestroyTexture(this->groundBottomTexture);
+    SDL_DestroyTexture(this->arrowTexture);
 }
 
 b2Body* screeningame::makeBlock(int x, int y, int w, int h, b2BodyType bt) {
@@ -104,14 +117,16 @@ void screeningame::render(SDL_Renderer* renderer) {
     applyGravity(this->player);
     this->player->ApplyForceToCenter(b2Vec2(120, 0), true);
     this->ground->SetTransform(b2Vec2(this->player->GetPosition().x, PJ_HEIGHT / 2), 0);
-    if(!((int) (rand() % 20))) {
+    if(!((int) (rand() % 10))) {
         b2Body* b = makeBlock(this->player->GetPosition().x + PJ_WIDTH + 8, rand() % PJ_HEIGHT, 8, 8, b2_dynamicBody);
         b->SetLinearVelocity(b2Vec2(-(rand() % 5000), 0));
         this->bodies.push_back(b);
     }
-    if(this->player->GetLinearVelocity().x < this->lastPlayerSpeed) {
+    if(fabs(this->player->GetLinearVelocity().x - this->lastPlayerSpeed) > 1) {
         this->gameLost = true;
     }
+    if(!this->gameLost)
+        this->score++;
     this->lastPlayerSpeed = this->player->GetLinearVelocity().x;
 
     SDL_Rect rect;
@@ -148,7 +163,8 @@ void screeningame::render(SDL_Renderer* renderer) {
     rect.x = this->player->GetPosition().x - srcrect.w / 4;
     rect.y = this->player->GetPosition().y - srcrect.h / 4;
     applyCamera(&rect.x);
-    SDL_RenderCopyEx(renderer, this->playerTexture, &srcrect, &rect, this->player->GetAngle() * (180.0f / 3.1415927f), NULL, SDL_FLIP_NONE);
+    bool playerFlipped = this->player->GetPosition().y < PJ_HEIGHT / 2;
+    SDL_RenderCopyEx(renderer, this->playerTexture, &srcrect, &rect, this->player->GetAngle() * (180.0f / 3.1415927f), NULL, playerFlipped ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE);
 
     SDL_QueryTexture(this->groundTopTexture, NULL, NULL, &rect.w, &rect.h);
     rect.x = fmod(-player->GetPosition().x, rect.w);
@@ -169,6 +185,21 @@ void screeningame::render(SDL_Renderer* renderer) {
         rect.x = PJ_WIDTH / 2 - rect.w / 2;
         rect.y = PJ_HEIGHT / 2 - rect.h / 2;
         SDL_RenderCopy(renderer, this->textYouLost, NULL, &rect);
+    } else {
+        SDL_QueryTexture(this->arrowTexture, NULL, NULL, &rect.w, &rect.h);
+        rect.x = PJ_WIDTH - rect.w - 2;
+        rect.y = PJ_HEIGHT / 2 - rect.h / 2;
+        SDL_RenderCopyEx(renderer, this->arrowTexture, NULL, &rect, 0, NULL, playerFlipped ? SDL_FLIP_NONE : SDL_FLIP_VERTICAL);
+    }
+
+    char scor[4];
+    sprintf(scor, "%i", this->score);
+    rect.x = 4;
+    rect.y = 4;
+    for(int i = 0; scor[i] != '\0'; i++) {
+        SDL_QueryTexture(this->digits[scor[i] - '0'], NULL, NULL, &rect.w, &rect.h);
+        SDL_RenderCopy(renderer, this->digits[scor[i] - '0'], NULL, &rect);
+        rect.x += rect.w;
     }
 
     //this->phys.DrawDebugData();

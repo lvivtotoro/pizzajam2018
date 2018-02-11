@@ -1,6 +1,7 @@
 #include<SDL.h>
 #include<SDL_image.h>
 #include<SDL_ttf.h>
+#include<stdio.h>
 
 #include"game.h"
 
@@ -8,7 +9,7 @@ int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO);
     IMG_Init(IMG_INIT_PNG);
     TTF_Init();
-    Mix_Init(MIX_INIT_OGG);
+    Mix_Init(MIX_INIT_MP3);
 
     pj::game game;
     game.start();

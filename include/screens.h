@@ -27,14 +27,18 @@ class screeningame : public screen {
     private:
         SDL_Texture* textYouLost;
 
+        SDL_Texture* digits[10];
+
         std::vector<SDL_Texture*> backgrounds;
         SDL_Texture* sphereTexture;
         SDL_Texture* groundTopTexture;
         SDL_Texture* groundBottomTexture;
+        SDL_Texture* arrowTexture;
 
         SDL_Texture* playerTexture;
         double playerFrame = 0;
 
+        long score = 0;
         bool gameLost = false;
 
         std::vector<b2Body*> bodies;
